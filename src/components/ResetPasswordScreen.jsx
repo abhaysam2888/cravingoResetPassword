@@ -7,19 +7,27 @@ export default function ResetPassword() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [loading, setLoading] = useState(false);
 
-  // Get URL params without react-router
+  // Get URL params (works without react-router)
   const searchParams = new URLSearchParams(window.location.search);
   const userId = searchParams.get("userId");
   const secret = searchParams.get("secret");
 
   const handleReset = async (e) => {
     e.preventDefault();
+
     if (!password || password !== confirmPassword) {
       setMessage({ text: "Passwords do not match!", type: "error" });
       return;
     }
 
+    if (!userId || !secret) {
+      setMessage({ text: "Invalid password reset link.", type: "error" });
+      return;
+    }
+
     setLoading(true);
+    setMessage({ text: "", type: "" });
+
     try {
       await authService.resetPassword(userId, secret, password);
       setMessage({
@@ -29,7 +37,11 @@ export default function ResetPassword() {
       setPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setMessage({ text: `Error: ${err.message}`, type: "error" });
+      console.error("Reset password error:", err);
+      setMessage({
+        text: err.message || "An unexpected error occurred.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -123,6 +135,7 @@ export default function ResetPassword() {
               marginTop: 20,
               textAlign: "center",
               color: message.type === "error" ? "#e74c3c" : "#2ecc71",
+              fontWeight: 500,
             }}
           >
             {message.text}
